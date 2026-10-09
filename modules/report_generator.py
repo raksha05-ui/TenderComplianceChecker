@@ -29,7 +29,7 @@ def _p(text):
 
 def results_dataframe(results):
     cols = ["req_id", "requirement", "mandatory", "req_page", "status", "document", "evidence_page",
-            "evidence", "evidence_strength", "reason"]
+            "evidence", "evidence_strength", "reason", "assessment_method"]
     df = pd.DataFrame(results)
     for c in cols:
         if c not in df:
@@ -88,6 +88,8 @@ def build_pdf(tender_name, vendor_docs, results, summary, mode="offline", genera
             f"<b>{_p(r.get('req_id'))}</b> - <font color='{color}'><b>{_p(r.get('status'))}</b></font>"
             f"{'' if r.get('mandatory', True) else ' (optional)'}", body))
         story.append(Paragraph(f"Requirement (tender p.{_p(r.get('req_page'))}): {_p(r.get('requirement'))}", body))
+        if r.get("assessment_method"):
+            story.append(Paragraph(f"Assessment method: {_p(r['assessment_method'])}", small))
         if r.get("document"):
             story.append(Paragraph(f"Evidence: {_p(r['document'])}, p.{_p(r.get('evidence_page'))} "
                                    f"(text similarity {_p(r.get('evidence_strength'))})", small))

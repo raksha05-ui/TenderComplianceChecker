@@ -1,6 +1,6 @@
-# Tender & Document Compliance Checker (offline-first, Phases 1-5)
+# Tender & Document Compliance Checker (offline-first)
 
-**Strategy:** the offline pipeline (extraction + TF-IDF matching + rules) is complete and demonstrable on its own. Google AI Studio settings can be recorded in `.env`, but this version does not make Gemini API calls; analysis remains offline.
+**Strategy:** the offline pipeline (extraction + TF-IDF matching + rules) works without an API key. Optionally, Gemini can review unresolved requirements against the app's matched evidence passages.
 
 Upload a tender PDF, extract its requirements, upload vendor documents (PDF/DOCX), and get an
 explainable compliance status per requirement. **Works fully offline - no API key needed.**
@@ -13,13 +13,14 @@ python data/make_samples.py          # creates SYNTHETIC demo files in data/samp
 streamlit run app.py
 ```
 
-Google AI Studio configuration (recognized by Settings, but not currently used to make API calls):
-```bash
-# Add these values to .env. Keep your API key private.
+Google AI Studio configuration in `.env` (keep your API key private):
+```dotenv
 GOOGLE_API_KEY=your-google-ai-studio-key
 LLM_PROVIDER=google
-LLM_MODEL=gemini-flash-latest
+LLM_MODEL=gemini-3.8-flash
 ```
+
+On **New Analysis**, Gemini is used only after you opt in with **Ask Gemini to review uncertain matches**. Only requirements left at **Needs Manual Review** and their retrieved evidence passages are sent to Google. Deadlines and definitive offline results are not sent. If Gemini is unavailable, the offline findings are kept. Gemini output is advisory and should be checked by a person.
 
 Demo: on **New Analysis** upload `data/samples/tender_sample.pdf`, then the four `vendor_*.pdf`
 files (skip `vendor_scanned.pdf` to see the OCR warning, or add it to see it handled).
@@ -43,10 +44,14 @@ python tests/test_phase5.py    # SQLite history + PDF/Excel report tests
 - Scanned PDFs need OCR first (e.g. `ocrmypdf`). DOCX text is reported as page 1.
 - Decision support only - not legal certification or a guarantee of eligibility.
 
+## Gemini review
+- Uses the configured stable model ID (`gemini-3.8-flash` by default in this setup).
+- Reviews only unresolved requirements with matched evidence, excluding tender deadlines.
+- Requires any compliant or potentially non-compliant result to cite a retrieved evidence passage; unsupported citations are ignored.
+- The API key is read from the environment and never stored in analysis history. Document excerpts are sent to Google only after explicit opt-in.
+
 ## Phase 5 additions
 - **History** (SQLite, `data/history.db`): every analysis is saved automatically; reopen or delete from the History page. Reviewer overrides on Results are saved too. Only requirement text, statuses, reasons and short evidence excerpts (max 500 chars, can be disabled in Settings) are stored - never API keys or full document text. Add `data/history.db` to `.gitignore`.
 - **Report** page: PDF report (tender details, executive summary, per-requirement results with evidence and page refs, missing evidence, manual-review items, next steps), plus Excel and CSV.
 - **Settings** page: shows whether an API key is configured (never the key), the excerpt-storage toggle and the DB location.
 
-## Not built yet
-Optional LLM mode (Phase 6: key via `.env`, see `.env.example`), UI polish, screenshots and final test write-up (Phase 7).

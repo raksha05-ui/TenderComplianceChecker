@@ -59,8 +59,18 @@ def test_definitive_offline_results_are_not_sent_to_gemini():
     assert client.calls == []
 
 
+def test_deadlines_are_never_sent_to_gemini():
+    reqs, candidates, results = _inputs()
+    reqs[0]["category"] = "Deadline"
+    client = FakeClient({"assessments": []})
+    updated = assess_unresolved_with_gemini(reqs, candidates, results, "test-key", "gemini-test", client)
+    assert updated[0]["status"] == "Needs Manual Review"
+    assert client.calls == []
+
+
 if __name__ == "__main__":
     test_gemini_assesses_only_manual_review_and_uses_source_evidence()
     test_invalid_evidence_reference_keeps_offline_result()
     test_definitive_offline_results_are_not_sent_to_gemini()
+    test_deadlines_are_never_sent_to_gemini()
     print("ALL GEMINI ASSESSOR TESTS PASSED")

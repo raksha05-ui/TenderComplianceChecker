@@ -22,6 +22,7 @@ def assess_unresolved_with_gemini(reqs, candidates, results, api_key, model, cli
         for row in result_rows
         if row.get("status") == REVIEW_STATUS
         and row.get("req_id") in req_by_id
+        and req_by_id[row["req_id"]].get("category") != "Deadline"
         and candidates.get(row["req_id"])
     ]
     if not targets:

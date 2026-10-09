@@ -1,4 +1,4 @@
-"""Tender & Document Compliance Checker - offline-first Streamlit app (Phase 1-5).
+"""Tender & Document Compliance Checker - offline-first Streamlit app (Phase 1-6).
 
 Run:  streamlit run app.py
 """
@@ -489,7 +489,10 @@ def page_report():
         st.warning(f"{pending} item(s) still need manual review. Correct them on **Results** before finalising.")
     c1, c2, c3 = st.columns(3)
     c1.download_button("Download PDF report",
-                       build_pdf(ss.tender_name, ss.vendor_names, ss.results, s),
+                       build_pdf(ss.tender_name, ss.vendor_names, ss.results, s,
+                                 mode="Gemini-assisted review" if any(
+                                     r.get("assessment_method") == "Gemini-assisted review" for r in ss.results
+                                 ) else "offline"),
                        "compliance_report.pdf", "application/pdf", type="primary")
     c2.download_button("Download Excel", build_excel(ss.results, s), "compliance_results.xlsx",
                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -550,5 +553,5 @@ def page_settings():
 PAGES = {"Home": page_home, "New Analysis": page_new, "Results": page_results,
          "Report": page_report, "History": page_history, "Settings": page_settings}
 choice = st.sidebar.radio("Navigate", list(PAGES))
-st.sidebar.caption("Mode: **offline** (no API key needed)")
+st.sidebar.caption("Mode: **offline by default**; Gemini review is opt-in")
 PAGES[choice]()
